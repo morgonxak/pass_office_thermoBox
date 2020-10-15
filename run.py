@@ -170,9 +170,10 @@ class controller():
             print("Error save {}".format(e))
             self._view.showMessage("Что то пошло не так")
 
-        #from expiriments.trening_models_cvm_knn import branch_3
+        from expiriments.trening_models_cvm_knn import branch_3
+
         from sys import platform
-        #branch_3(self.settings.settings['PATH_DATASET'], self.settings.settings['PATH_SAVE_MODEL'])
+        branch_3(self.settings.settings['PATH_DATASET'], self.settings.settings['PATH_SAVE_MODEL'])
 
         if platform == "linux" or platform == "linux2":
             os.system('nautilus {}'.format(self.settings.settings['PATH_SAVE_MODEL']))

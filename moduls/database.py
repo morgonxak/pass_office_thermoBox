@@ -74,6 +74,7 @@ class DataBase:
                     status_photo integer
                 );''')
         self.con.commit()
+        self.add_user("test", "test", "test")
         print("Былы созданна Таблица с пользователями")
         return 0
 
