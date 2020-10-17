@@ -206,7 +206,8 @@ class DataBase:
 
 
 if __name__ == '__main__':
-    pathDataBase = '/home/dima/PycharmProjects/pass_office_thermoBox/rc/database'
+    pathDataBase = os.path.join('.','pass_office_thermoBox','rc','database')
+    #'C:\\Users\\Admin\\Desktop\\python\\pass_office_thermoBox\\pass_office_thermoBox\\rc\\database'
     database = DataBase(pathDataBase)
     database.create_table_default()
     # database.add_user('Шумелев', 'Дмитрий', 'Игореви')

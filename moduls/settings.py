@@ -9,9 +9,9 @@
 import os
 import json
 
-DEFAULT_SETTINGS = {'PATH_DATA_BASE': '',
+DEFAULT_SETTINGS = {'PATH_DATA_BASE': './rc/database',
                     'PATH_DATASET': '',
-                    'PATH_SAVE_MODEL': '',
+                    'PATH_SAVE_MODEL': './rc',
                     'ID_CARARA': 0,
                     'IP_RASPBERRY': ''
                     }
@@ -28,6 +28,8 @@ class Settings:
         '''
         self.path_settings = path_settings
         self.settings = DEFAULT_SETTINGS
+        
+        
 
 
     def update(self, setting: dict=None):
@@ -53,8 +55,8 @@ class Settings:
             '''
             with open(self.path_settings, "r") as read_file:
                 self.settings = json.load(read_file)
-
         if os.path.isfile(self.path_settings):
+
             load_json()
             return 0
         else:
@@ -87,7 +89,8 @@ class Settings:
         return 0
 
 if __name__ == '__main__':
-    path_sattings = '/home/dima/PycharmProjects/pass_office_thermoBox/rc/settings'
+    path_sattings = os.path.join('.','rc','settings')
+    
     settings = Settings(path_sattings)
     print(settings.settings)
     settings.load()

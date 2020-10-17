@@ -24,24 +24,25 @@ from moduls.vievs_moduls.windows_update_user import Windows_update_user
 class controller():
 
     def __init__(self, settings:Settings):
-        self.settings = settings
-        self.settings.load()
+        
+        self.settings = settings 
+        self.settings.load() # чтение словаря
 
         self._app = QtWidgets.QApplication(sys.argv)
-        self._view = mainForm()
+        self._view = mainForm() # окно
         #self.dialog = Windows_update_user(self._view)
 
-        self.dataBase = DataBase(self.settings.settings['PATH_DATA_BASE'])
+        self.dataBase = DataBase(self.settings.settings['PATH_DATA_BASE']) # подключение бд по путир
 
-        self.display = Display(self.settings)
+        self.display = Display(self.settings) # изображение с камеры
         self.display.signal_frame_RGB.connect(self._view.showGraphicsViewRGB)
         self.display.start()
 
         self.last_photo = []  #Хранит сделанные фотографии пользователей
 
-        self._view.pull_data_table(self.get_data_of_dataBase())
+        self._view.pull_data_table(self.get_data_of_dataBase()) # из бд в табл
 
-        self.init_button()
+        self.init_button() # присвоение действий к кнопам
 
 
 
@@ -548,8 +549,7 @@ class mainForm(QtWidgets.QMainWindow, Ui_MainWindow):
             return None
 
 def main():
-
-    pathSettings = r'rc/settings'
+    pathSettings =os.path.join(os.getcwd(),'rc','settings')
     settings = Settings(pathSettings)
     controll = controller(settings)
     controll.run()
