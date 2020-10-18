@@ -107,6 +107,7 @@ class Ui_MainWindow(object):
         self.tabWidget.setStyleSheet("")
         self.tabWidget.setObjectName("tabWidget")
         self.tab = QtWidgets.QWidget()
+        
         font = QtGui.QFont()
         font.setPointSize(10)
         font.setBold(True)
@@ -182,6 +183,8 @@ class Ui_MainWindow(object):
         self.pushButton_2.setFont(font)
         self.pushButton_2.setObjectName("pushButton_2")
         self.gridLayout_2.addWidget(self.pushButton_2, 2, 0, 1, 1)
+        
+        
         self.tabWidget.addTab(self.tab, "")
         self.tab_2 = QtWidgets.QWidget()
         self.tab_2.setObjectName("tab_2")
@@ -228,6 +231,7 @@ class Ui_MainWindow(object):
         self.tabWidget.addTab(self.tab_2, "")
         self.tab_4 = QtWidgets.QWidget()
         self.tab_4.setObjectName("tab_4")
+        
         self.gridLayout_4 = QtWidgets.QGridLayout(self.tab_4)
         self.gridLayout_4.setObjectName("gridLayout_4")
         self.groupBox_2 = QtWidgets.QGroupBox(self.tab_4)
@@ -380,6 +384,12 @@ class Ui_MainWindow(object):
         MainWindow.setTabOrder(self.pushButton_3, self.lineEdit_5)
         MainWindow.setTabOrder(self.lineEdit_5, self.lineEdit_6)
         MainWindow.setTabOrder(self.lineEdit_6, self.lineEdit_7)
+        """
+        #self.tabWidget.setTabEnabled(0,False); # отключаем принудительные переходы
+        self.tabWidget.setTabEnabled(1,False);# отключаем принудительные переходы
+        self.tabWidget.setTabEnabled(2,False);# отключаем принудительные переходы
+        """
+        self.tab_setTabEnabled(0)
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
@@ -415,3 +425,12 @@ class Ui_MainWindow(object):
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_4), _translate("MainWindow", "Сохранения данных"))
         self.action.setText(_translate("MainWindow", "Настройки"))
         self.action_2.setText(_translate("MainWindow", "Выход"))
+    
+    def tab_setTabEnabled(self, i):
+        self.tabWidget.setTabEnabled(0,False);
+        self.tabWidget.setTabEnabled(1,False);
+        self.tabWidget.setTabEnabled(2,False);
+        try:
+            self.tabWidget.setTabEnabled(i,True);
+        except:
+            self.showMessage("tab_setTabEnabled err")

@@ -53,6 +53,7 @@ class controller():
         '''
         self._view.ui.pushButton.clicked.connect(self.add_User)
         self._view.dialog.signal_update_info_user.connect(self.update_info_user)
+        self._view.dialog.signal_delete_PERSON_ID.connect(self.delete_PERSON_ID)
         self._view.ui.pushButton_2.clicked.connect(self._view.onClick_photography_process)
         self._view.ui.pushButton_3.clicked.connect(self.onClick_to_make_photo)
         self._view.ui.pushButton_4.clicked.connect(self._view.onClick_next)
@@ -70,6 +71,19 @@ class controller():
         print("info['person_id']", info['person_id'])
         if self.dataBase.update_user_by_personId(info['person_id'], info['last_name'], info['first_name'], info['middle_name'], info['mode_skip']) != -1:
             self._view.showMessage("Информация о пользователе изменена")
+            self._view.pull_data_table(self.get_data_of_dataBase())
+            return 0
+        self._view.showMessage("Что то пошло не так")
+        return -1
+    
+    def delete_PERSON_ID(self, info):
+        '''
+        удаляем пользователя
+        :return:
+        '''
+        print("delete_PERSON_ID ", info['person_id'])
+        if self.dataBase.del_user(info['person_id']) != -1:
+            self._view.showMessage("Пользователь удалён")
             self._view.pull_data_table(self.get_data_of_dataBase())
             return 0
         self._view.showMessage("Что то пошло не так")
@@ -109,11 +123,14 @@ class controller():
         LAST_NAME = self._view.ui.lineEdit.text()
         FIRST_NAME = self._view.ui.lineEdit_2.text()
         MIDDLE_NAME = self._view.ui.lineEdit_3.text()
-
-        if self.dataBase.add_user(LAST_NAME, FIRST_NAME, MIDDLE_NAME) != -1:
-            self._view.showMessage("Пользователь успешно добавлен")
-            self._view.pull_data_table(self.get_data_of_dataBase())
-
+        
+        
+        if LAST_NAME != '' and FIRST_NAME != ''and MIDDLE_NAME != '':
+            if self.dataBase.add_user(LAST_NAME, FIRST_NAME, MIDDLE_NAME) != -1:
+                self._view.showMessage("Пользователь успешно добавлен")
+                self._view.pull_data_table(self.get_data_of_dataBase())
+        else:
+            self._view.showMessage("Введите данные")
     def onClick_to_make_photo(self):
         '''
         Пр нажатии на кнопку сделать фото
@@ -228,10 +245,10 @@ class mainForm(QtWidgets.QMainWindow, Ui_MainWindow):
     '''
     def __init__(self):
         super().__init__()
-        self.ui = Ui_MainWindow()
+        self.ui = Ui_MainWindow() # гл форма
         self.ui.setupUi(self)
         self.__init_table()
-        self.dialog = Windows_update_user(self)
+        self.dialog = Windows_update_user(self) # форма редактирования
 
         self.current_info_user = {'personId': None, 'last_name': None, 'first_name': None, 'middle_name': None, 'mode_skip': None, 'photo': []}
 
@@ -343,7 +360,21 @@ class mainForm(QtWidgets.QMainWindow, Ui_MainWindow):
         x0 = currentQTableWidgetItem.row()
         y1 = 5
         self.ui.tableWidget.setRangeSelected(QTableWidgetSelectionRange(x0, 0, x0, y1), True)
-
+    
+    def ontab_CurrentIndex(self, i):
+        
+        self.ui.tabWidget.setTabEnabled(0,False);
+        self.ui.tabWidget.setTabEnabled(1,False);
+        self.ui.tabWidget.setTabEnabled(2,False);
+        
+        #self.tab_setTabEnabled(i)
+        
+        try:
+            self.ui.tabWidget.setTabEnabled(i,True);
+            self.ui.tabWidget.setCurrentIndex(i)
+        except:
+            self.showMessage("ontab_CurrentIndex err")
+            
     def onClick_cancel(self):
         '''
         при нажатии кнопки отмена
@@ -356,9 +387,13 @@ class mainForm(QtWidgets.QMainWindow, Ui_MainWindow):
             self.list_lablel_photo[count].setText('Фото')
 
         self.ui.pushButton_3.setText("Сфотографировать")
+        """
         self.ui.tab_4.setEnabled(False)
         self.ui.tab_2.setEnabled(False)
         self.ui.tab.setEnabled(True)
+        
+        """
+        self.ontab_CurrentIndex(0)
         self.ui.tabWidget.setCurrentIndex(0)
 
     def onDoubleClicked(self):
@@ -407,10 +442,12 @@ class mainForm(QtWidgets.QMainWindow, Ui_MainWindow):
             self.current_info_user['first_name'] = FIRST_NAME
             self.current_info_user['middle_name'] = MIDDLE_NAME
             self.current_info_user['mode_skip'] = MODE_SKIP
-
+            """
             self.ui.tab.setEnabled(False)
 
             self.ui.tab_2.setEnabled(True)
+            """
+            self.ontab_CurrentIndex(1)
             self.ui.tabWidget.setCurrentIndex(1)
 
             print(PERSON_ID, FIRST_NAME, LAST_NAME, MIDDLE_NAME, MODE_SKIP)
@@ -432,8 +469,10 @@ class mainForm(QtWidgets.QMainWindow, Ui_MainWindow):
 
             if count >= 9:
                 break
-
+        """
         self.ui.tab_4.setEnabled(True)
+        """
+        self.ontab_CurrentIndex(2)
         self.ui.tabWidget.setCurrentIndex(2)
 
     def pull_data_table(self, dict_data):
