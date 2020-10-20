@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+## -*- coding: utf-8 -*-
 from PyQt5 import QtCore, QtGui, QtWidgets
 #from osgeo import gdal
 from PyQt5.QtGui import QPixmap

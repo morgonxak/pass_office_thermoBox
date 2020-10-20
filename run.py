@@ -1,3 +1,8 @@
+# -*- coding: utf-8 -*-
+## -*- coding: utf-8 -*-
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 '''
 В классе воспроизведения попробывать исправить if status поставить перед цыклом
 '''
@@ -30,13 +35,12 @@ class controller():
 
         self._app = QtWidgets.QApplication(sys.argv)
         self._view = mainForm() # окно
-        #self.dialog = Windows_update_user(self._view)
+        self._view.mainForm = self
+        
 
         self.dataBase = DataBase(self.settings.settings['PATH_DATA_BASE']) # подключение бд по путир
-
-        self.display = Display(self.settings) # изображение с камеры
-        self.display.signal_frame_RGB.connect(self._view.showGraphicsViewRGB)
-        self.display.start()
+        
+        self.display = None
 
         self.last_photo = []  #Хранит сделанные фотографии пользователей
 
@@ -44,23 +48,46 @@ class controller():
 
         self.init_button() # присвоение действий к кнопам
 
+    def display_on(self, on = True):
+        if on:
+            if self.display == None:
 
+                self.display = Display(self.settings) # изображение с камеры
+                self.display.signal_frame_RGB.connect(self._view.showGraphicsViewRGB)
+                self.display.start()
+                #self.dialog = Windows_update_user(self._view)
+        else:
+            if self.display != None:
+                if not self.display.isFinished():
+                    self.display.__del__()
+                self.display.quit()
+                self.display = None
 
     def init_button(self):
         '''
         Инициализация привязок кнопок
         :return:
         '''
-        self._view.ui.pushButton.clicked.connect(self.add_User)
         self._view.dialog.signal_update_info_user.connect(self.update_info_user)
         self._view.dialog.signal_delete_PERSON_ID.connect(self.delete_PERSON_ID)
-        self._view.ui.pushButton_2.clicked.connect(self._view.onClick_photography_process)
-        self._view.ui.pushButton_3.clicked.connect(self.onClick_to_make_photo)
-        self._view.ui.pushButton_4.clicked.connect(self._view.onClick_next)
-        self._view.ui.pushButton_12.clicked.connect(self._view.onClick_cancel)
-        self._view.ui.pushButton_10.clicked.connect(self._view.onClick_cancel)
-        self._view.ui.pushButton_9.clicked.connect(self.onCkick_save)
-        self._view.ui.pushButton_11.clicked.connect(self.onClick_save_to_treneng)
+        # поиск
+        self._view.ui.pushButton.clicked.connect(self.add_User) #Добавить пользователя
+        self._view.ui.pushButton_5.clicked.connect(self._view.search_table) #Найти пользователя
+        self._view.ui.pushButton_2.clicked.connect(self._view.onClick_photography_process) #Приступить к фотографированию
+        self._view.ui.pushButton_11.clicked.connect(self.onClick_save_to_treneng) #сохранить и обучить
+        # фото
+        self._view.ui.pushButton_3.clicked.connect(self.onClick_to_make_photo) #Сфотографировать
+        self._view.ui.pushButton_4.clicked.connect(self._view.onClick_next) #Далее
+        self._view.ui.pushButton_12.clicked.connect(self._view.onClick_cancel) #отмена
+        #Сохранение данных
+        self._view.ui.pushButton_10.clicked.connect(self._view.onClick_cancel) #Отмена
+        self._view.ui.pushButton_9.clicked.connect(self.onCkick_save) #Сохранить
+        
+        
+        
+
+        
+
 
     def update_info_user(self, info):
         '''
@@ -125,7 +152,7 @@ class controller():
         MIDDLE_NAME = self._view.ui.lineEdit_3.text()
         
         
-        if LAST_NAME != '' and FIRST_NAME != ''and MIDDLE_NAME != '':
+        if LAST_NAME != '' and FIRST_NAME != '':
             if self.dataBase.add_user(LAST_NAME, FIRST_NAME, MIDDLE_NAME) != -1:
                 self._view.showMessage("Пользователь успешно добавлен")
                 self._view.pull_data_table(self.get_data_of_dataBase())
@@ -136,10 +163,14 @@ class controller():
         Пр нажатии на кнопку сделать фото
         :return:
         '''
+        
+        self.display_on(True)
+
         photo = self.display.get_frame()
 
         self._view.current_info_user['photo'].append(photo)
         self._view.ui.pushButton_3.setText("Сфотографировать №{}".format(len(self._view.current_info_user['photo'])))
+        self._view.ui.pushButton_4.setEnabled(True)
 
     def onCkick_save(self):
         '''
@@ -249,7 +280,7 @@ class mainForm(QtWidgets.QMainWindow, Ui_MainWindow):
         self.ui.setupUi(self)
         self.__init_table()
         self.dialog = Windows_update_user(self) # форма редактирования
-
+        self.mainForm = None
         self.current_info_user = {'personId': None, 'last_name': None, 'first_name': None, 'middle_name': None, 'mode_skip': None, 'photo': []}
 
         self.list_lablel_photo = [self.ui.label_photo_1, self.ui.label_photo_2, self.ui.label_photo_3,
@@ -332,7 +363,48 @@ class mainForm(QtWidgets.QMainWindow, Ui_MainWindow):
         #print("RGB", pixMap)
         self.ui.graphicsView.setPhoto(pixMap)
         self.ui.graphicsView.fitInView(False)
-
+        
+    def search_table(self):
+        """
+        поиск в тб фио полностью
+        """
+        FIRST_NAME = self.ui.lineEdit.text()
+        LAST_NAME = self.ui.lineEdit_2.text()
+        MIDDLE_NAME = self.ui.lineEdit_3.text()
+        rows = self.ui.tableWidget.rowCount()
+        first = -1
+        first_i = -1
+        i_for = 0
+        for i in range(rows):
+            i_for = 0
+            if FIRST_NAME == self.ui.tableWidget.item(i,0).text():
+                i_for = 1 
+                if LAST_NAME == self.ui.tableWidget.item(i,1).text(): i_for += 1 
+                if MIDDLE_NAME == self.ui.tableWidget.item(i,2).text(): i_for += 1 
+                if first < i_for:
+                    first = i_for
+                    first_i = i
+                    if first == 3:
+                        break
+            """
+            if FIRST_NAME == self.ui.tableWidget.item(i,0).text() and LAST_NAME == self.ui.tableWidget.item(i,1).text() and MIDDLE_NAME == self.ui.tableWidget.item(i,2).text():
+                if not first: 
+                    self.ui.tableWidget.selectRow(i)
+                    break
+            """
+        #print(first_i)
+        if first_i != -1:
+            if first == 3:
+                self.showMessage("Пользователь найден")
+            elif first == 1:
+                self.showMessage("Пользователь найден по фамилии")
+            else:
+                self.showMessage("Найден ближайший пользователь")
+            self.ui.tableWidget.selectRow(first_i)
+        else:
+            self.showMessage("Пользователь не найден")
+            self.ui.tableWidget.clearSelection()
+            
     def __init_table(self):
         self.ui.tableWidget.setColumnCount(6)  # Устанавливаем три колонки
 
@@ -361,7 +433,7 @@ class mainForm(QtWidgets.QMainWindow, Ui_MainWindow):
         y1 = 5
         self.ui.tableWidget.setRangeSelected(QTableWidgetSelectionRange(x0, 0, x0, y1), True)
     
-    def ontab_CurrentIndex(self, i):
+    def ontab_CurrentIndex(self, i):# доступность вкладок
         
         self.ui.tabWidget.setTabEnabled(0,False);
         self.ui.tabWidget.setTabEnabled(1,False);
@@ -393,9 +465,12 @@ class mainForm(QtWidgets.QMainWindow, Ui_MainWindow):
         self.ui.tab.setEnabled(True)
         
         """
-        self.ontab_CurrentIndex(0)
-        self.ui.tabWidget.setCurrentIndex(0)
-
+        self.ontab_CurrentIndex(0) # доступность вкладок
+        self.ui.tabWidget.setCurrentIndex(0) # перход на  вкладку
+        
+        
+        self.mainForm.display_on(False)# вкыл \ выкл поток
+        
     def onDoubleClicked(self):
         '''
 
@@ -426,6 +501,10 @@ class mainForm(QtWidgets.QMainWindow, Ui_MainWindow):
         except IndexError:
             self.showMessage("Данные не выбраны")
         else:
+            
+            self.ui.pushButton_4.setEnabled(False)
+            self.mainForm.display_on(True)
+            
             row = currentQTableWidgetItem.row()
             PERSON_ID = self.ui.tableWidget.item(row, 5).text()  # 342bdfdf-e798-4300-a843-a85c80289d5d
 
@@ -433,6 +512,7 @@ class mainForm(QtWidgets.QMainWindow, Ui_MainWindow):
             LAST_NAME = self.ui.tableWidget.item(row, 1).text()
             MIDDLE_NAME = self.ui.tableWidget.item(row, 2).text()
             MODE_SKIP = self.ui.tableWidget.item(row, 3).text()
+            
 
             self.current_info_user = {'personId': None, 'last_name': None, 'first_name': None, 'middle_name': None, 'mode_skip': None,
                                       'photo': []}
@@ -463,9 +543,10 @@ class mainForm(QtWidgets.QMainWindow, Ui_MainWindow):
         self.ui.lineEdit_7.setText(self.current_info_user['middle_name'])
 
         for count, photo in enumerate(self.current_info_user['photo']):
-            photo = cv2.resize(photo, (0, 0), fx=0.25, fy=0.25)
-            protoPixMap = self.__converterNumpyAraayToPixMap(photo)
-            self.list_lablel_photo[count].setPixmap(protoPixMap)
+            if self.mainForm.display != None:
+                photo = cv2.resize(photo, (0, 0), fx=0.25, fy=0.25)
+                protoPixMap = self.__converterNumpyAraayToPixMap(photo)
+                self.list_lablel_photo[count].setPixmap(protoPixMap)
 
             if count >= 9:
                 break

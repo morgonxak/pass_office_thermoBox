@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+## -*- coding: utf-8 -*-
 import cv2
 import numpy
 
@@ -73,3 +75,6 @@ class Camera:
         :return:
         '''
         return self.frame_acquisition_mode
+    
+    def release(self):
+        self.cam.release

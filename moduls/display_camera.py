@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+## -*- coding: utf-8 -*-
 import os
 import sys
 import numpy
@@ -61,3 +63,4 @@ class Display(QThread):
     def __del__(self):
         self.frame_acquisition_mode = False
         gc.collect()
+        self.cam.release
