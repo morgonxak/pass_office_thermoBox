@@ -179,6 +179,7 @@ class controller():
         '''
         try:
             path_user = os.path.join(self.settings.settings['PATH_DATASET'], self._view.current_info_user['personId'])
+            
             if not os.path.isdir(path_user):
                 os.mkdir(path_user)
                 if not os.path.isdir(os.path.join(path_user, 'RGB')):
@@ -202,41 +203,45 @@ class controller():
         При нажатии сохранить и обучить
         :return:
         '''
-
-        try:
-            path_user = os.path.join(self.settings.settings['PATH_DATASET'], self._view.current_info_user['personId'])
-            if not os.path.isdir(path_user):
-                os.mkdir(path_user)
-                if not os.path.isdir(os.path.join(path_user, 'RGB')):
-                    os.mkdir(os.path.join(path_user, 'RGB'))
-
-            with open(os.path.join(path_user, 'RGB', 'photo.pickl'), 'wb') as f:
-                pickle.dump(self._view.current_info_user['photo'], f)
-
-            self.dataBase.update_status_photo_by_personId(self._view.current_info_user['personId'], 1)
-
-        except BaseException as e:
-            print("Error save {}".format(e))
-            self._view.showMessage("Что то пошло не так")
-
+        from sys import platform
+        ifplatform = (platform == "linux" or platform == "linux2")
+        set_PATH_DATASET = os.path.abspath(self.settings.settings['PATH_DATASET'])
+        set_PATH_SAVE_MODEL= os.path.abspath(self.settings.settings['PATH_SAVE_MODEL'])
+        #?????????????????
+        
+        """
+        if ifplatform and set_PATH_DATASET.find("\\") !=-1:
+            set_PATH_DATASET = set_PATH_DATASET.replace("\\", "/")
+            set_PATH_SAVE_MODEL = set_PATH_SAVE_MODEL.replace("\\", "/")
+            
+        elif not ifplatform and set_PATH_DATASET.find("/") !=-1:
+            set_PATH_DATASET = set_PATH_DATASET.replace("/", "\\")
+            set_PATH_SAVE_MODEL = set_PATH_SAVE_MODEL.replace("/", "\\")
+            
+        """
         from expiriments.trening_models_cvm_knn import branch_3
 
-        from sys import platform
-        branch_3(self.settings.settings['PATH_DATASET'], self.settings.settings['PATH_SAVE_MODEL'])
+        #from sys import platform
+        branch_3(set_PATH_DATASET, set_PATH_SAVE_MODEL)
 
-        if platform == "linux" or platform == "linux2":
-            os.system('nautilus {}'.format(self.settings.settings['PATH_SAVE_MODEL']))
+        #if platform == "linux" or platform == "linux2":
+        if ifplatform:
+            os.system('nautilus {}'.format(set_PATH_SAVE_MODEL))
         else:
-            os.system('explorer.exe {}'.format(self.settings.settings['PATH_SAVE_MODEL']))
+            os.system('explorer.exe {}'.format(set_PATH_SAVE_MODEL))
 
         self._view.showMessage("Данные успешно сохранены")
+
+
+
+
 
         if self._view.diolog_yes_no():
             if self.cp() == -1:
                 self._view.showMessage("Что то пошло не так, проверьте IP")
             else:
                 self._view.showMessage("Данные были успешно переданны")
-
+                
         self._view.pull_data_table(self.get_data_of_dataBase())
         self._view.onClick_cancel()
 
