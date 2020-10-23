@@ -81,7 +81,13 @@ class controller():
         self._view.ui.pushButton.clicked.connect(self.add_User) #Добавить пользователя
         self._view.ui.pushButton_5.clicked.connect(self._view.search_table) #Найти пользователя
         self._view.ui.pushButton_2.clicked.connect(self._view.onClick_photography_process) #Приступить к фотографированию
-        self._view.ui.pushButton_11.clicked.connect(self.onClick_save_to_treneng) #сохранить и обучить
+        self._view.ui.pushButton_11.clicked.connect(self.onClick_save_to_treneng) #Обучить базу
+        
+        self._view.ui.pushButton_6.clicked.connect(self.onCP) #Отправить базу на станцию
+        self._view.ui.pushButton_7.clicked.connect(self.onOpen_PATH) #Открыть папку с базой 
+        
+        
+        
         # фото
         self._view.ui.pushButton_3.clicked.connect(self.onClick_to_make_photo) #Сфотографировать
         self._view.ui.pushButton_4.clicked.connect(self._view.onClick_next) #Далее
@@ -204,18 +210,36 @@ class controller():
         self._view.showMessage("Данные успешно сохранены")
         self._view.pull_data_table(self.get_data_of_dataBase())
         self._view.onClick_cancel()
-
+        
+        
+    def onOpen_PATH(self):
+        from sys import platform
+        ifplatform = (platform == "linux" or platform == "linux2")
+        set_PATH_SAVE_MODEL= os.path.abspath(self.settings.settings['PATH_SAVE_MODEL'])
+        if ifplatform:
+            os.system('nautilus {}'.format(set_PATH_SAVE_MODEL))
+        else:
+            os.system('explorer.exe {}'.format(set_PATH_SAVE_MODEL))
+            
+    def onCP(self):
+        if self._view.diolog_yes_no():
+            if self.cp() == -1:
+                self._view.showMessage("Что то пошло не так, проверьте IP")
+            else:
+                self._view.showMessage("Данные были успешно переданны")
+                
+        
     def onClick_save_to_treneng(self):
         '''
         При нажатии сохранить и обучить
         :return:
         '''
-        from sys import platform
-        ifplatform = (platform == "linux" or platform == "linux2")
+        #from sys import platform
+        #ifplatform = (platform == "linux" or platform == "linux2")
         set_PATH_DATASET = os.path.abspath(self.settings.settings['PATH_DATASET'])
         set_PATH_SAVE_MODEL= os.path.abspath(self.settings.settings['PATH_SAVE_MODEL'])
         #?????????????????
-        
+        print(set_PATH_DATASET)
         """
         if ifplatform and set_PATH_DATASET.find("\\") !=-1:
             set_PATH_DATASET = set_PATH_DATASET.replace("\\", "/")
@@ -229,15 +253,16 @@ class controller():
         #from expiriments.trening_models_cvm_knn import branch_3
 
         #from sys import platform
-        print("0")
+
         branch_3(set_PATH_DATASET, set_PATH_SAVE_MODEL)
-        print("1")
+ 
         #if platform == "linux" or platform == "linux2":
+        """
         if ifplatform:
             os.system('nautilus {}'.format(set_PATH_SAVE_MODEL))
         else:
             os.system('explorer.exe {}'.format(set_PATH_SAVE_MODEL))
-
+        """    
         self._view.showMessage("Данные успешно сохранены")
 
 
@@ -609,6 +634,10 @@ class mainForm(QtWidgets.QMainWindow, Ui_MainWindow):
 
         # изменить размер столбца по содержимому
         self.ui.tableWidget.resizeColumnsToContents()
+        self.ui.tableWidget.sortItems(0, Qt.AscendingOrder)
+        self.ui.tableWidget.sortItems(1, Qt.AscendingOrder)
+        self.ui.tableWidget.sortItems(2, Qt.AscendingOrder)
+        self.ui.tableWidget.setSortingEnabled(True)
 
     def showMessage(self, message):
         '''

@@ -159,15 +159,7 @@ def branch_3(path_dataset, pathSave):
             :return:
             '''
             face_bounding_boxes = face_recognition.face_locations(color_image)
-           
-            print(people)
-            print(face_bounding_boxes)
-            cv2.imshow('window', color_image)
-            time_temp1 = time.time()
-            while(time_temp1+1 > time.time()):
-                None
-            #time.sleep(3)
-            cv2.destroyAllWindows()
+
             if len(face_bounding_boxes) != 1:
                 # если изображения не подходит (нет человека или их много).
                 print("Изображение ({}) не может учавствовать в трененровки: {}".format(people,"Нет лица" if len(
@@ -177,7 +169,7 @@ def branch_3(path_dataset, pathSave):
                 encodings.append(face_recognition.face_encodings(color_image, known_face_locations=face_bounding_boxes)[0])  # 128 уникальных признаков
                 person_id.append(people)  # Уникальный ключ пользователя
 
-        i_for = 0 # кол-во успешных обработок
+        #i_for = 0 # кол-во успешных обработок
         list_people = os.listdir(pathPhoto)
         print("Количество пользователей в базе:", len(list_people))
         
@@ -193,7 +185,7 @@ def branch_3(path_dataset, pathSave):
                 color_image = cv2.imread(os.path.join(pathPhoto, people, 'RGB', namePhoto))
                 print("0 0 0")  
                 addFace_by_classification(color_image, people)
-            i_for += 1
+            #i_for += 1
             try:
                 listPhoto = loadImage_pickl(os.path.join(pathPhoto, people, 'RGB/photo.pickl'))
             except BaseException as e:
@@ -205,11 +197,10 @@ def branch_3(path_dataset, pathSave):
 
         
         print("Загрузка данных завершена")
-        return i_for
-    print("0 0")    
-    i = load_image_people(path_dataset)
-    print("kol-vo = {}".format(i))
-    print("0 1")  
+        #return i_for
+  
+    load_image_people(path_dataset)
+ 
     print('обучаем нейросети')
     clf_svm = train_cvm()
     clf_knn = train_knn()
