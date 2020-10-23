@@ -14,6 +14,8 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from moduls.vievs_moduls.PhotoViewer import PhotoViewer
 
 class Ui_MainWindow(object):
+    
+    if_signal_close = QtCore.pyqtSignal(bool)
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(862, 814)
@@ -401,7 +403,10 @@ class Ui_MainWindow(object):
         MainWindow.setTabOrder(self.pushButton_3, self.lineEdit_5)
         MainWindow.setTabOrder(self.lineEdit_5, self.lineEdit_6)
         MainWindow.setTabOrder(self.lineEdit_6, self.lineEdit_7)
+        
+        
         self.tab_setTabEnabled(0)
+
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
@@ -447,3 +452,7 @@ class Ui_MainWindow(object):
             self.tabWidget.setTabEnabled(i,True);
         except:
             self.showMessage("tab_setTabEnabled err")
+            
+    def closeEvent(self, event):
+        # Переопределить colseEvent
+        self.if_signal_close.emit(True)

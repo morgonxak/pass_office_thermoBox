@@ -24,7 +24,7 @@ import pickle
 from moduls.settings import Settings
 from moduls.display_camera import Display
 from moduls.vievs_moduls.windows_update_user import Windows_update_user
-
+from expiriments.trening_models_cvm_knn import branch_3
 
 class controller():
 
@@ -36,7 +36,6 @@ class controller():
         self._app = QtWidgets.QApplication(sys.argv)
         self._view = mainForm() # окно
         self._view.mainForm = self
-        
 
         self.dataBase = DataBase(self.settings.settings['PATH_DATA_BASE']) # подключение бд по путир
         
@@ -47,13 +46,17 @@ class controller():
         self._view.pull_data_table(self.get_data_of_dataBase()) # из бд в табл
 
         self.init_button() # присвоение действий к кнопам
-
+        
+        
     def display_on(self, on = True):
         if on:
             if self.display == None:
 
                 self.display = Display(self.settings) # изображение с камеры
+                #self.display.signal_frame_RGB.connect([self._view.showGraphicsViewRGB, self._view.if_current_frame])
                 self.display.signal_frame_RGB.connect(self._view.showGraphicsViewRGB)
+                #i_if = False
+                self.display.if_signal_frame_RGB.connect(self._view.if_showGraphicsViewRGB)
                 self.display.start()
                 #self.dialog = Windows_update_user(self._view)
         else:
@@ -68,8 +71,12 @@ class controller():
         Инициализация привязок кнопок
         :return:
         '''
+        #сигналы из окна редактироваия
         self._view.dialog.signal_update_info_user.connect(self.update_info_user)
         self._view.dialog.signal_delete_PERSON_ID.connect(self.delete_PERSON_ID)
+        #сигналы из окна 
+        self._view.if_signal_close.connect(self.Form_Close)
+        
         # поиск
         self._view.ui.pushButton.clicked.connect(self.add_User) #Добавить пользователя
         self._view.ui.pushButton_5.clicked.connect(self._view.search_table) #Найти пользователя
@@ -165,12 +172,12 @@ class controller():
         '''
         
         self.display_on(True)
-
-        photo = self.display.get_frame()
-
-        self._view.current_info_user['photo'].append(photo)
-        self._view.ui.pushButton_3.setText("Сфотографировать №{}".format(len(self._view.current_info_user['photo'])))
-        self._view.ui.pushButton_4.setEnabled(True)
+        
+        if self._view.ui.if_current_frame:
+            photo = self.display.get_frame()
+            self._view.current_info_user['photo'].append(photo)
+            self._view.ui.pushButton_3.setText("Сфотографировать №{}".format(len(self._view.current_info_user['photo'])))
+            self._view.ui.pushButton_4.setEnabled(True)
 
     def onCkick_save(self):
         '''
@@ -219,11 +226,12 @@ class controller():
             set_PATH_SAVE_MODEL = set_PATH_SAVE_MODEL.replace("/", "\\")
             
         """
-        from expiriments.trening_models_cvm_knn import branch_3
+        #from expiriments.trening_models_cvm_knn import branch_3
 
         #from sys import platform
+        print("0")
         branch_3(set_PATH_DATASET, set_PATH_SAVE_MODEL)
-
+        print("1")
         #if platform == "linux" or platform == "linux2":
         if ifplatform:
             os.system('nautilus {}'.format(set_PATH_SAVE_MODEL))
@@ -274,7 +282,14 @@ class controller():
 
     def __del__(self):
         gc.collect()
+        
+    def Form_Close(self, i_if): 
+       if i_if:
+           self.display_on(False)
+           
+           self.dataBase.__del__()
 
+       
 class mainForm(QtWidgets.QMainWindow, Ui_MainWindow):
     '''
     Функционал для отображения и для взаимодействия с пользователем
@@ -287,7 +302,8 @@ class mainForm(QtWidgets.QMainWindow, Ui_MainWindow):
         self.dialog = Windows_update_user(self) # форма редактирования
         self.mainForm = None
         self.current_info_user = {'personId': None, 'last_name': None, 'first_name': None, 'middle_name': None, 'mode_skip': None, 'photo': []}
-
+        
+        self.if_current_frame = False
         self.list_lablel_photo = [self.ui.label_photo_1, self.ui.label_photo_2, self.ui.label_photo_3,
                                   self.ui.label_photo_4, self.ui.label_photo_5,
                                   self.ui.label_photo_6, self.ui.label_photo_7, self.ui.label_photo_8,
@@ -357,6 +373,11 @@ class mainForm(QtWidgets.QMainWindow, Ui_MainWindow):
             state = False
         return state
 
+    def if_showGraphicsViewRGB(self, bool1):
+        # есть ли лицо на фото
+        #print(bool1)
+        self.ui.if_current_frame = bool1
+        #self.ui.graphicsView.setPhoto(pixMap)
 
     def showGraphicsViewRGB(self, pixMap):
         '''
