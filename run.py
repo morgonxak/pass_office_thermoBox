@@ -48,6 +48,7 @@ class controller():
         self.init_button() # присвоение действий к кнопам
         
         
+        
     def display_on(self, on = True):
         if on:
             if self.display == None:
@@ -95,9 +96,14 @@ class controller():
         #Сохранение данных
         self._view.ui.pushButton_10.clicked.connect(self._view.onClick_cancel) #Отмена
         self._view.ui.pushButton_9.clicked.connect(self.onCkick_save) #Сохранить
+        #self._view.ui.pushButton_8.clicked.connect(self._view.photo_back) #<
+        #self._view.ui.pushButton_13.clicked.connect(self._view.photo_next) #>
+        self._view.ui.pushButton_8.clicked.connect(self._view.onClick_next_photo) #выбор фото
+
+        self._view.ui.pushButton_13.clicked.connect(self._view.onClick_delete_photo) #Удалить фото
         
         
-        
+
 
         
 
@@ -171,6 +177,7 @@ class controller():
                 self._view.pull_data_table(self.get_data_of_dataBase())
         else:
             self._view.showMessage("Введите данные")
+            
     def onClick_to_make_photo(self):
         '''
         Пр нажатии на кнопку сделать фото
@@ -190,26 +197,32 @@ class controller():
         Сохраняем данные пользователя
         :return:
         '''
-        try:
-            path_user = os.path.join(self.settings.settings['PATH_DATASET'], self._view.current_info_user['personId'])
+        
+        if len(self._view.current_info_user['photo'])< self._view.min_photo:
             
-            if not os.path.isdir(path_user):
-                os.mkdir(path_user)
-                if not os.path.isdir(os.path.join(path_user, 'RGB')):
-                    os.mkdir(os.path.join(path_user, 'RGB'))
-
-            with open(os.path.join(path_user, 'RGB', 'photo.pickl'), 'wb') as f:
-                pickle.dump(self._view.current_info_user['photo'], f)
-
-            self.dataBase.update_status_photo_by_personId(self._view.current_info_user['personId'], 1)
-
-        except BaseException as e:
-            print("Error save {}".format(e))
-            self._view.showMessage("Что то пошло не так")
-
-        self._view.showMessage("Данные успешно сохранены")
-        self._view.pull_data_table(self.get_data_of_dataBase())
-        self._view.onClick_cancel()
+            self._view.showMessage("Должно быть не меньше {} фото".format(self._view.min_photo))
+        else:
+        
+            try:
+                path_user = os.path.join(self.settings.settings['PATH_DATASET'], self._view.current_info_user['personId'])
+                
+                if not os.path.isdir(path_user):
+                    os.mkdir(path_user)
+                    if not os.path.isdir(os.path.join(path_user, 'RGB')):
+                        os.mkdir(os.path.join(path_user, 'RGB'))
+    
+                with open(os.path.join(path_user, 'RGB', 'photo.pickl'), 'wb') as f:
+                    pickle.dump(self._view.current_info_user['photo'], f)
+    
+                self.dataBase.update_status_photo_by_personId(self._view.current_info_user['personId'], 1)
+    
+            except BaseException as e:
+                print("Error save {}".format(e))
+                self._view.showMessage("Что то пошло не так")
+    
+            self._view.showMessage("Данные успешно сохранены")
+            self._view.pull_data_table(self.get_data_of_dataBase())
+            self._view.onClick_cancel()
         
         
     def onOpen_PATH(self):
@@ -327,12 +340,16 @@ class mainForm(QtWidgets.QMainWindow, Ui_MainWindow):
         self.dialog = Windows_update_user(self) # форма редактирования
         self.mainForm = None
         self.current_info_user = {'personId': None, 'last_name': None, 'first_name': None, 'middle_name': None, 'mode_skip': None, 'photo': []}
-        
+        self.min_photo = 9
         self.if_current_frame = False
+        self.list_lablel_photo = [self.ui.label_photo_1]
+        """
         self.list_lablel_photo = [self.ui.label_photo_1, self.ui.label_photo_2, self.ui.label_photo_3,
                                   self.ui.label_photo_4, self.ui.label_photo_5,
                                   self.ui.label_photo_6, self.ui.label_photo_7, self.ui.label_photo_8,
                                   self.ui.label_photo_9, self.ui.label_photo_10]
+        """
+        #self._next=0
 
     def diolog_yes_no(self):
         '''
@@ -520,7 +537,7 @@ class mainForm(QtWidgets.QMainWindow, Ui_MainWindow):
         self.ui.tabWidget.setCurrentIndex(0) # перход на  вкладку
         
         
-        self.mainForm.display_on(False)# вкыл \ выкл поток
+        self.mainForm.display_on(False)# вкл \ выкл поток
         
     def onDoubleClicked(self):
         '''
@@ -583,29 +600,67 @@ class mainForm(QtWidgets.QMainWindow, Ui_MainWindow):
 
             print(PERSON_ID, FIRST_NAME, LAST_NAME, MIDDLE_NAME, MODE_SKIP)
 
+    def onClick_next_photo(self):
+        if self.mainForm.display != None:
+            photo = self.current_info_user['photo'][self.ui.spinBox.value()-1]
+            #photo = cv2.resize(photo, (0, 0), fx=0.25, fy=0.25)
+            protoPixMap = self.__converterNumpyAraayToPixMap(photo)
+            self.list_lablel_photo[0].setPixmap(protoPixMap)
+            
+            self.ui.groupBox.setTitle("Фото {} ({})".format(self.ui.spinBox.value(), self.ui.spinBox.maximum()))
+            
+    def onClick_delete_photo(self):
+         if self.mainForm.display != None :
+             if self.ui.spinBox.maximum() <= self.min_photo:
+                 self.showMessage("Должно быть не меньше {} фото".format(self.min_photo))
+             else:
+                nomer = self.ui.spinBox.value() 
+                self.current_info_user['photo'].pop(nomer-1)
+                if nomer > self.ui.spinBox.maximum()-1 : nomer-=1
+                self.ui.spinBox.setMaximum(len(self.current_info_user['photo']))
+                self.ui.spinBox.setValue(nomer)
+                self.onClick_next_photo()
+             
+             
+        
+
     def onClick_next(self):
         '''
         при нажатии кнопки далее на вкладке фото
         :return:
         '''
-
-        self.ui.lineEdit_5.setText(self.current_info_user['last_name'])
-        self.ui.lineEdit_6.setText(self.current_info_user['first_name'])
-        self.ui.lineEdit_7.setText(self.current_info_user['middle_name'])
-
-        for count, photo in enumerate(self.current_info_user['photo']):
-            if self.mainForm.display != None:
-                photo = cv2.resize(photo, (0, 0), fx=0.25, fy=0.25)
-                protoPixMap = self.__converterNumpyAraayToPixMap(photo)
-                self.list_lablel_photo[count].setPixmap(protoPixMap)
-
-            if count >= 9:
-                break
-        """
-        self.ui.tab_4.setEnabled(True)
-        """
-        self.ontab_CurrentIndex(2)
-        self.ui.tabWidget.setCurrentIndex(2)
+        
+        i_len = len(self.current_info_user['photo'])
+        if i_len  < self.min_photo:
+            self.showMessage("Должно быть не меньше {} фото".format(self.min_photo))
+        else:
+            self.ui.lineEdit_5.setText(self.current_info_user['last_name'])
+            self.ui.lineEdit_6.setText(self.current_info_user['first_name'])
+            self.ui.lineEdit_7.setText(self.current_info_user['middle_name'])
+            self.ui.spinBox.setMinimum(1)
+            self.ui.spinBox.setMaximum(i_len)
+    
+            
+                
+                
+            self.onClick_next_photo()
+            """
+            for count, photo in enumerate(self.current_info_user['photo']):
+                if self.mainForm.display != None:
+                    photo = cv2.resize(photo, (0, 0), fx=0.25, fy=0.25)
+                    protoPixMap = self.__converterNumpyAraayToPixMap(photo)
+                    self.list_lablel_photo[count].setPixmap(protoPixMap)
+    
+                if count >= 9:
+                    break
+            """
+            """
+            self.ui.tab_4.setEnabled(True)
+            """
+        
+        
+            self.ontab_CurrentIndex(2)
+            self.ui.tabWidget.setCurrentIndex(2)
 
     def pull_data_table(self, dict_data):
         '''
@@ -629,7 +684,7 @@ class mainForm(QtWidgets.QMainWindow, Ui_MainWindow):
             self.ui.tableWidget.setItem(count, 3, createItem(str(dict_data[key_people]['MODE_SKIP']), Qt.ItemIsSelectable | Qt.ItemIsEnabled))
             self.ui.tableWidget.setItem(count, 4, createItem(str(dict_data[key_people]['STATUS_PHOTO']), Qt.ItemIsSelectable | Qt.ItemIsEnabled))
             self.ui.tableWidget.setItem(count, 5, createItem(str(key_people), Qt.ItemIsSelectable | Qt.ItemIsEnabled))
-
+            # может проверять фото по сущ папки???
 
 
         # изменить размер столбца по содержимому
