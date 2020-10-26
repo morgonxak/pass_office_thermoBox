@@ -1,17 +1,23 @@
+# -*- coding: utf-8 -*-
+## -*- coding: utf-8 -*-
 '''
 Диологовое окно для изменения информации о пользователе
 функционал:
 1) on_click_update - при нажатии обновить данные возвращает данные из формы и в сигнал signal_update_info_user
+   on_click_delete -  signal_delete_PERSON_ID
 2) set_text - Выставляет данные в форму
 3) close_diolog - при нажатии на кнопку закрыть окно
 '''
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import pyqtSignal
+from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QMessageBox
+
 import sys
 
 class Windows_update_user(QtWidgets.QDialog):
     signal_update_info_user = pyqtSignal(dict)
+    signal_delete_PERSON_ID = pyqtSignal(dict)
 
     def __init__(self, parent=None):
         QtWidgets.QDialog.__init__(self, parent)
@@ -66,10 +72,19 @@ class Windows_update_user(QtWidgets.QDialog):
         self.lineEdit_4 = QtWidgets.QLineEdit(Dialog)
         self.lineEdit_4.setObjectName("lineEdit_4")
         self.formLayout.setWidget(3, QtWidgets.QFormLayout.FieldRole, self.lineEdit_4)
-        self.gridLayout.addLayout(self.formLayout, 0, 0, 1, 2)
+        self.gridLayout.addLayout(self.formLayout, 0, 0, 1, 3) # 3 - делит и занимает 3 части экрана
+		
+		
         self.pushButton_2 = QtWidgets.QPushButton(Dialog)
         self.pushButton_2.setObjectName("pushButton_2")
-        self.gridLayout.addWidget(self.pushButton_2, 1, 1, 1, 1)
+        self.gridLayout.addWidget(self.pushButton_2, 1, 2, 1, 1)
+		
+		
+        self.pushButton_delete = QtWidgets.QPushButton(Dialog)
+        self.pushButton_delete.setObjectName("pushButton_delete")
+        self.gridLayout.addWidget(self.pushButton_delete, 1, 1, 1, 1)
+		
+		
         self.pushButton = QtWidgets.QPushButton(Dialog)
         self.pushButton.setObjectName("pushButton")
         self.gridLayout.addWidget(self.pushButton, 1, 0, 1, 1)
@@ -79,6 +94,7 @@ class Windows_update_user(QtWidgets.QDialog):
 
         self.pushButton.clicked.connect(self.on_click_update)
         self.pushButton_2.clicked.connect(self.close_diolog)
+        self.pushButton_delete.clicked.connect(self.on_click_delete)
 
     def retranslateUi(self):
         _translate = QtCore.QCoreApplication.translate
@@ -88,6 +104,7 @@ class Windows_update_user(QtWidgets.QDialog):
         self.label_4.setText(_translate("Dialog", "Права доступа:"))
         self.pushButton.setText(_translate("Dialog", "Изменить"))
         self.pushButton_2.setText(_translate("Dialog", "Закрыть"))
+        self.pushButton_delete.setText(_translate("Dialog", "Удалить"))
 
     def on_click_update(self):
         '''
@@ -105,7 +122,45 @@ class Windows_update_user(QtWidgets.QDialog):
         self.signal_update_info_user.emit(update_info_user)
 
         return update_info_user
+    
+    def on_click_delete(self):
+        '''
+        При нажатии на кнопку удаляет по id 
+        :return:
+        '''
+        """
+        ret = QMessageBox::warning(this, tr("My Application"),
+                               tr("The document has been modified.\n"
+                                  "Do you want to save your changes?"),
+                               QMessageBox::Save | QMessageBox::Discard
+                               | QMessageBox::Cancel,
+                               QMessageBox::Save);
+        """
+        """
+        msgBox = QMessageBox()
+        msgBox.setIcon(QMessageBox.Information)
+        msgBox.setText("При удалении, данные о пользователе будут утеряны")
+        msgBox.setWindowTitle("Удалить пользователя?")
+        msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+        msgBox.buttonClicked.connect(msgButtonClick)
+        
+        returnValue = msgBox.exec()
+        if returnValue == QMessageBox.Ok:
+            print('on_click_delete OK clicked')
+        """
+        last_name = self.lineEdit.text()
+        first_name = self.lineEdit_2.text()
+        middle_name = self.lineEdit_3.text()
+        mode_skip = self.lineEdit_4.text()
 
+        self.hide()
+
+        update_info_user = {"last_name": last_name, "first_name": first_name, "middle_name": middle_name, "mode_skip": mode_skip, 'person_id': self.PERSON_ID}
+        self.signal_delete_PERSON_ID.emit(update_info_user)
+        
+    def msgButtonClick(i):
+        print("Button clicked is:",i.text())
+        
     def set_text(self, last_name, first_name, middle_name, mode_skip, PERSON_ID):
         '''
         Заполняет значения формы

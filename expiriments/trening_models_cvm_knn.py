@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+## -*- coding: utf-8 -*-
 '''
 Модуль предназначен для создания классификаторов CVM и KNN по фотографиям из базы данных
 '''
@@ -157,26 +159,33 @@ def branch_3(path_dataset, pathSave):
             :return:
             '''
             face_bounding_boxes = face_recognition.face_locations(color_image)
+
             if len(face_bounding_boxes) != 1:
-                # если изображения не подходит.
-                print("Изображение не может учавствовать в трененровки: {}".format("Нет лица" if len(
+                # если изображения не подходит (нет человека или их много).
+                print("Изображение ({}) не может учавствовать в трененровки: {}".format(people,"Нет лица" if len(
                     face_bounding_boxes) < 1 else "Более одного лица"))
             else:
                 # Доболяем изображения
-                encodings.append(face_recognition.face_encodings(color_image, known_face_locations=face_bounding_boxes)[
-                                     0])  # 128 уникальных признаков
+                encodings.append(face_recognition.face_encodings(color_image, known_face_locations=face_bounding_boxes)[0])  # 128 уникальных признаков
                 person_id.append(people)  # Уникальный ключ пользователя
 
+        #i_for = 0 # кол-во успешных обработок
         list_people = os.listdir(pathPhoto)
         print("Количество пользователей в базе:", len(list_people))
+        
         for people in list_people:
+            if not os.path.isdir(os.path.join(pathPhoto, people)): #  проверка на файлы
+                continue
+            
             listRGBPhoto = os.listdir(os.path.join(pathPhoto, people, 'RGB'))
             print("Кличество RGB фото: {}".format(len(listRGBPhoto)))
-            for namePhoto in listRGBPhoto:
+            for namePhoto in listRGBPhoto: ## от нестандарта. если не стондарт, то попятка преобразовать
                 if namePhoto == 'photo.png': continue
                 if namePhoto == 'photo.pickl': continue
                 color_image = cv2.imread(os.path.join(pathPhoto, people, 'RGB', namePhoto))
+                print("0 0 0")  
                 addFace_by_classification(color_image, people)
+            #i_for += 1
             try:
                 listPhoto = loadImage_pickl(os.path.join(pathPhoto, people, 'RGB/photo.pickl'))
             except BaseException as e:
@@ -186,11 +195,12 @@ def branch_3(path_dataset, pathSave):
                 for color_image in listPhoto:
                     addFace_by_classification(color_image, people)
 
-
+        
         print("Загрузка данных завершена")
-
+        #return i_for
+  
     load_image_people(path_dataset)
-
+ 
     print('обучаем нейросети')
     clf_svm = train_cvm()
     clf_knn = train_knn()
